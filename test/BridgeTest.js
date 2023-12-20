@@ -23,4 +23,11 @@ contract("Bridge", accounts => {
         assert.equal(bridgeBalance.toString(), "1000", "The bridge should have 1000 USDC tokens");
     });
 
+    it("should allow owner to complete a transfer", async () => {
+        await bridge.completeTransfer(0, { from: owner });
+
+        const transfer = await bridge.transfers(0);
+        assert.equal(transfer.completed, true, "The transfer should be marked as completed");
+    });
+
 });
