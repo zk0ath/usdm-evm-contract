@@ -14,10 +14,18 @@ contract Bridge {
     }
 
     mapping(uint256 => BridgeTransfer) public transfers;
+    mapping(address => uint256) public balances;
+    mapping(uint256 => bool) public processedTransactions;
+
     uint256 public nextTransferId;
 
     event Deposit(address indexed sender, uint256 amount, uint256 transferId);
     event TransferCompleted(uint256 transferId);
+    event ReleaseTokens(
+        address indexed recipient,
+        uint256 amount,
+        uint256 transactionId
+    );
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not owner");
@@ -30,7 +38,10 @@ contract Bridge {
     }
 
     function deposit(uint256 amount) public {
-        require(usdcToken.transferFrom(msg.sender, address(this), amount), "Transfer failed");
+        require(
+            usdcToken.transferFrom(msg.sender, address(this), amount),
+            "Transfer failed"
+        );
         transfers[nextTransferId] = BridgeTransfer(msg.sender, amount, false);
         emit Deposit(msg.sender, amount, nextTransferId);
         nextTransferId++;
@@ -41,5 +52,19 @@ contract Bridge {
         require(!transfer.completed, "Transfer already completed");
         transfer.completed = true;
         emit TransferCompleted(transferId);
+    }
+
+    function releaseTokens(
+        address recipient,
+        uint256 amount,
+        uint256 transactionId
+    ) public onlyOwner {
+        require(
+            !processedTransactions[transactionId],
+            "Transaction already processed"
+        );
+        processedTransactions[transactionId] = true;
+        require(usdcToken.transfer(recipient, amount), "Transfer failed");
+        emit ReleaseTokens(recipient, amount, transactionId);
     }
 }
