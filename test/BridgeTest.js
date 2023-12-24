@@ -10,6 +10,9 @@ contract("Bridge", accounts => {
     before(async () => {
         usdcMock = await MyUsdc.new(owner);
         bridge = await Bridge.new(usdcMock.address);
+
+        await usdcMock.mint(bridge.address, web3.utils.toBN("1000000"));
+        await usdcMock.mint(user, web3.utils.toBN("1000"));
     });
 
     it("should allow users to deposit USDC tokens", async () => {
@@ -49,6 +52,17 @@ contract("Bridge", accounts => {
             assert(error, "Expected an error but did not get one");
             assert(error.message.includes("Transaction already processed"), "Expected 'Transaction already processed' error");
         }
+    });
+
+    it("should allow users to withdraw their balances", async () => {
+        await usdcMock.approve(bridge.address, "1000", { from: user });
+
+        await bridge.deposit("1000", { from: user });
+
+        await bridge.withdraw({ from: user });
+
+        const userBalance = await usdcMock.balanceOf(user);
+        assert.equal(userBalance.toString(), "1000", "The user should have withdrawn their 1000 USDC tokens");
     });
 
 });
