@@ -26,6 +26,7 @@ contract Bridge {
         uint256 amount,
         uint256 transactionId
     );
+    event Withdrawal(address indexed user, uint256 amount);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not owner");
@@ -43,6 +44,8 @@ contract Bridge {
             "Transfer failed"
         );
         transfers[nextTransferId] = BridgeTransfer(msg.sender, amount, false);
+        balances[msg.sender] += amount;
+
         emit Deposit(msg.sender, amount, nextTransferId);
         nextTransferId++;
     }
@@ -51,6 +54,8 @@ contract Bridge {
         BridgeTransfer storage transfer = transfers[transferId];
         require(!transfer.completed, "Transfer already completed");
         transfer.completed = true;
+        balances[transfer.sender] -= transfer.amount;
+
         emit TransferCompleted(transferId);
     }
 
@@ -66,5 +71,15 @@ contract Bridge {
         processedTransactions[transactionId] = true;
         require(usdcToken.transfer(recipient, amount), "Transfer failed");
         emit ReleaseTokens(recipient, amount, transactionId);
+    }
+
+    function withdraw() public {
+        uint256 userBalance = balances[msg.sender];
+        require(userBalance > 0, "No balance to withdraw");
+
+        balances[msg.sender] = 0;
+        require(usdcToken.transfer(msg.sender, userBalance), "Transfer failed");
+
+        emit Withdrawal(msg.sender, userBalance);
     }
 }

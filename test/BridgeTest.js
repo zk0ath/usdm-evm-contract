@@ -8,7 +8,7 @@ contract("Bridge", accounts => {
     const user = accounts[1];
 
     before(async () => {
-        usdcMock = await MyUsdc.new();
+        usdcMock = await MyUsdc.new(owner);
         bridge = await Bridge.new(usdcMock.address);
     });
 
