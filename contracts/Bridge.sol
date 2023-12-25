@@ -82,4 +82,8 @@ contract Bridge {
 
         emit Withdrawal(msg.sender, userBalance);
     }
+
+    function getBalanceOnContract() public view returns (uint256) {
+        return balances[msg.sender];
+    }
 }
