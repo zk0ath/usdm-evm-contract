@@ -65,4 +65,14 @@ contract("Bridge", accounts => {
         assert.equal(userBalance.toString(), "1000", "The user should have withdrawn their 1000 USDC tokens");
     });
 
+    it("should correctly report a user's balance on the contract", async () => {
+        await usdcMock.approve(bridge.address, "100", { from: user });
+
+        await bridge.deposit("100", { from: user });
+
+        const balanceOnContract = await bridge.getBalanceOnContract({ from: user });
+
+        assert.equal(balanceOnContract.toString(), "100", "The user's balance on the contract should be 100 USDC tokens");
+    });
+
 });
