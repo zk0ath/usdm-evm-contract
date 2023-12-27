@@ -10,6 +10,8 @@ contract Bridge {
     struct BridgeTransfer {
         address sender;
         uint256 amount;
+        bytes32 recipient;
+        bytes4 destination;
         bool completed;
     }
 
@@ -38,12 +40,22 @@ contract Bridge {
         usdcToken = IERC20(_usdcTokenAddress);
     }
 
-    function deposit(uint256 amount) public {
+    function deposit(
+        uint256 amount,
+        bytes32 recipient,
+        bytes4 destination
+    ) public {
         require(
             usdcToken.transferFrom(msg.sender, address(this), amount),
             "Transfer failed"
         );
-        transfers[nextTransferId] = BridgeTransfer(msg.sender, amount, false);
+        transfers[nextTransferId] = BridgeTransfer(
+            msg.sender,
+            amount,
+            recipient,
+            destination,
+            false
+        );
         balances[msg.sender] += amount;
 
         emit Deposit(msg.sender, amount, nextTransferId);
